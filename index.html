@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>마라톤 능력 분석기 | Marathon Ability Analyzer</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f6f7;
+        margin: 0;
+        padding: 0;
+    }
+    header {
+        background: linear-gradient(135deg, #2b6cb0, #2c5282);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+    }
+    .container {
+        max-width: 800px;
+        margin: auto;
+        margin-top: 30px;
+        padding: 20px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+    .card {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 12px;
+        background: #fafafa;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .lang-btns button {
+        margin: 5px;
+        padding: 8px 14px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #e2e8f0;
+    }
+    input {
+        width: 96%;
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e0;
+    }
+    button.action {
+        margin-top: 15px;
+        padding: 10px 18px;
+        background: #2b6cb0;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    table th, table td {
+        border-bottom: 1px solid #ccc;
+        padding: 8px;
+        text-align: center;
+    }
+</style>
+</head>
+
+<body>
+<header id="title">🇰🇷 마라톤 능력 분석기</header>
+
+<div class="container">
+
+    <div class="lang-btns">
+        <button onclick="setLang('ko')">🇰🇷 한국어</button>
+        <button onclick="setLang('zh')">🇨🇳 中文</button>
+        <button onclick="setLang('en')">🇺🇸 English</button>
+    </div>
+
+    <div class="card">
+        <h2 id="login_title">이름을 입력하세요</h2>
+        <input id="username" placeholder="홍길동" />
+        <button class="action" onclick="login()" id="login_btn">로그인</button>
+    </div>
+
+    <div class="card">
+        <h3 id="tool_title">마라톤 추천 도구</h3>
+        <input id="weight" type="number" placeholder="체중 (kg)" />
+        <input id="height" type="number" placeholder="키 (cm)" />
+        <button class="action" onclick="analyze()" id="analyze_btn">분석하기</button>
+        <p id="result"></p>
+    </div>
+
+    <div class="card">
+        <h3 id="rank_title">🏆 실시간 랭킹 Top 10</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th id="rank_name">이름</th>
+                    <th id="rank_score">추천 거리</th>
+                </tr>
+            </thead>
+            <tbody id="rankList"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
+
+    // ✅ 你提供的 firebase 配置（已完整替换）
+    const firebaseConfig = {
+      apiKey: "AIzaSyCXVK_p-JgQIRg4YrfAaFU7gLDRRHPSHRY",
+      authDomain: "mls123-11999.firebaseapp.com",
+      databaseURL: "https://mls123-11999-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "mls123-11999",
+      storageBucket: "mls123-11999.firebasestorage.app",
+      messagingSenderId: "609804813150",
+      appId: "1:609804813150:web:baf8d8c75364457bff05cf",
+      measurementId: "G-K01XZ2XL0M"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let currentUser = "";
+
+    // 로그인
+    function login() {
+        currentUser = document.getElementById("username").value.trim();
+        if (!currentUser) {
+            alert("이름을 입력하세요.");
+            return;
+        }
+        alert("로그인 완료！");
+    }
+
+    // 분석 (简单 BMI → 推荐马拉松距离)
+    function analyze() {
+        if (!currentUser) {
+            alert("로그인 후 이용하세요.");
+            return;
+        }
+        const w = parseFloat(document.getElementById("weight").value);
+        const h = parseFloat(document.getElementById("height").value) / 100;
+
+        if (!w || !h) {
+            alert("체중/키를 입력하세요.");
+            return;
+        }
+
+        const bmi = w / (h * h);
+        let distance = "";
+
+        if (bmi < 20) distance = "10km";
+        else if (bmi < 24) distance = "하프 마라톤 (21km)";
+        else distance = "풀코스 마라톤 (42km)";
+
+        document.getElementById("result").innerText =
+            currentUser + " 님에게 추천되는 코스: " + distance;
+
+        // Firebase 저장
+        set(ref(db, "marathon/" + currentUser), {
+            name: currentUser,
+            score: distance
+        });
+    }
+
+    // 랭킹 출력
+    const rankRef = ref(db, "marathon");
+    onValue(rankRef, snapshot => {
+        const data = snapshot.val();
+        const tbody = document.getElementById("rankList");
+        tbody.innerHTML = "";
+
+        if (!data) return;
+
+        const arr = Object.values(data).slice(0, 10);
+
+        arr.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${item.name}</td><td>${item.score}</td>`;
+            tbody.appendChild(tr);
+        });
+    });
+
+    // 多语言
+    const texts = {
+        ko: {
+            title: "🇰🇷 마라톤 능력 분석기",
+            login_title: "이름을 입력하세요",
+            login_btn: "로그인",
+            tool_title: "마라톤 추천 도구",
+            analyze_btn: "분석하기",
+            rank_title: "🏆 실시간 랭킹 Top 10",
+            rank_name: "이름",
+            rank_score: "추천 거리"
+        },
+        zh: {
+            title: "🇨🇳 马拉松能力分析器",
+            login_title: "请输入姓名",
+            login_btn: "登录",
+            tool_title: "马拉松推荐工具",
+            analyze_btn: "开始分析",
+            rank_title: "🏆 实时排行榜 Top 10",
+            rank_name: "姓名",
+            rank_score: "推荐距离"
+        },
+        en: {
+            title: "🇺🇸 Marathon Ability Analyzer",
+            login_title: "Enter your name",
+            login_btn: "Login",
+            tool_title: "Marathon Recommendation Tool",
+            analyze_btn: "Analyze",
+            rank_title: "🏆 Real-time Ranking Top 10",
+            rank_name: "Name",
+            rank_score: "Recommended Distance"
+        }
+    };
+
+    window.setLang = function(lang) {
+        const t = texts[lang];
+        document.getElementById("title").innerText = t.title;
+        document.getElementById("login_title").innerText = t.login_title;
+        document.getElementById("login_btn").innerText = t.login_btn;
+        document.getElementById("tool_title").innerText = t.tool_title;
+        document.getElementById("analyze_btn").innerText = t.analyze_btn;
+        document.getElementById("rank_title").innerText = t.rank_title;
+        document.getElementById("rank_name").innerText = t.rank_name;
+        document.getElementById("rank_score").innerText = t.rank_score;
+    };
+
+</script>
+
+</body>
+</html>
