@@ -1,246 +1,665 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>마라톤 능력 분석기 | Marathon Ability Analyzer</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>韩国运动偏好 × 个性化马拉松小助手（含小游戏）</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7f9fc; --card:#ffffff; --text:#0f1724; --muted:#6b7280;
+      --accent1:#7B61FF; --accent2:#5AA0FF; --accent3:#ff7a6b;
+      --game-bg:#0b1220; --game-panel:#0f1724;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Arial; margin:0; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased}
+    .header{display:flex;justify-content:space-between;align-items:center;padding:24px 36px}
+    .brand{display:flex;gap:14px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--accent1),var(--accent2));display:flex;align-items:center;justify-content:center;color:white;font-weight:800}
+    .h-title{font-size:18px;font-weight:800}
+    .h-sub{font-size:13px;color:var(--muted)}
+    .langs{display:flex;gap:8px}
+    .langs button{background:transparent;border:1px solid rgba(15,23,36,0.06);padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+    .langs button.active{background:linear-gradient(135deg,var(--accent1),var(--accent2));color:white;border:0}
 
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f5f6f7;
-        margin: 0;
-        padding: 0;
-    }
-    header {
-        background: linear-gradient(135deg, #2b6cb0, #2c5282);
-        color: white;
-        padding: 20px;
-        text-align: center;
-        font-size: 24px;
-        font-weight: bold;
-    }
-    .container {
-        max-width: 800px;
-        margin: auto;
-        margin-top: 30px;
-        padding: 20px;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    }
-    .card {
-        margin-top: 20px;
-        padding: 20px;
-        border-radius: 12px;
-        background: #fafafa;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    .lang-btns button {
-        margin: 5px;
-        padding: 8px 14px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        background: #e2e8f0;
-    }
-    input {
-        width: 96%;
-        padding: 10px;
-        margin-top: 10px;
-        border-radius: 8px;
-        border: 1px solid #cbd5e0;
-    }
-    button.action {
-        margin-top: 15px;
-        padding: 10px 18px;
-        background: #2b6cb0;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        width: 100%;
-    }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
-    }
-    table th, table td {
-        border-bottom: 1px solid #ccc;
-        padding: 8px;
-        text-align: center;
-    }
-</style>
+    .container{max-width:1100px;margin:12px auto;padding:0 20px}
+    .grid{display:grid;grid-template-columns:1fr 380px;gap:20px}
+    .card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 12px 36px rgba(19,59,102,0.04);border:1px solid rgba(16,24,40,0.03)}
+    .section-title{font-size:16px;font-weight:700;margin-bottom:8px}
+    .lead{color:var(--muted);font-size:13px;margin-bottom:12px}
+    .canvas-wrap{border-radius:12px;padding:12px;background:linear-gradient(180deg,#fbfdff,#f2f7ff)}
+    .legend{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .legend-item{display:flex;gap:12px;align-items:flex-start}
+    .swatch{width:12px;height:12px;border-radius:4px}
+
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #e6eefc;background:transparent}
+    .btn{padding:10px 14px;border-radius:12px;border:0;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;font-weight:700;cursor:pointer}
+    .btn.secondary{background:linear-gradient(135deg,#ff8a7a,#ff5a5f)}
+    .btn.ghost{background:transparent;border:1px solid rgba(16,24,40,0.06);color:var(--text)}
+    .result{margin-top:12px;background:linear-gradient(180deg,#f8fbff,#fff);padding:12px;border-radius:12px;border:1px solid #eef6ff;display:none}
+    .result.show{display:block}
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .stat{background:#fff;padding:12px;border-radius:10px;box-shadow:0 6px 14px rgba(2,6,23,0.03)}
+    .stat-label{font-size:12px;color:var(--muted)}
+    .stat-value{font-size:18px;font-weight:800;color:var(--accent1)}
+
+    .route{margin-top:14px}
+    #routeBox{height:84px;border-radius:12px;background:linear-gradient(90deg,#eef6ff,#f7fbff);position:relative;overflow:hidden;border:1px solid #e6f0ff}
+    .runner-svg{width:48px;height:48px;position:absolute;top:18px;left:12px;transition:left 3s linear, transform 0.2s linear}
+    .runner-svg.running{animation:bob 0.45s steps(2,end) infinite}
+    @keyframes bob{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
+
+    /* 游戏卡（暗色风） */
+    .game-card{margin-top:14px;border-radius:12px;overflow:hidden;border:1px solid rgba(2,6,23,0.06)}
+    .game-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:linear-gradient(90deg,#071025,#0b1320);color:#e8f7ff}
+    .game-body{display:flex;gap:18px;padding:16px;background:linear-gradient(180deg,#071024,#071228)}
+    .game-canvas-wrap{flex:1;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#0b1220,#071025);padding:10px;position:relative}
+    #gameCanvas{width:100%;height:360px;display:block;border-radius:8px;background:linear-gradient(180deg,#071025,#081326)}
+    .game-controls{width:320px;min-width:220px;color:#cfeeff}
+    .hud-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .chip{background:rgba(255,255,255,0.03);padding:8px;border-radius:8px;font-weight:700;color:var(--muted)}
+    .chip .val{display:block;color:#bff0ff;font-weight:900}
+    .control-btn{display:flex;gap:8px;margin-top:10px}
+    .control-btn button{flex:1;padding:10px;border-radius:10px;border:0;background:linear-gradient(135deg,#00a6d9,#00d4ff);color:#041425;font-weight:800;cursor:pointer}
+    .control-btn .ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#bfefff}
+    .small-note{font-size:12px;color:#a9cfe0;margin-top:8px}
+
+    footer{padding:18px;color:var(--muted);text-align:center}
+
+    @media(max-width:980px){.grid{grid-template-columns:1fr}.game-body{flex-direction:column}.game-controls{width:100%}}
+  </style>
 </head>
-
 <body>
-<header id="title">🇰🇷 마라톤 능력 분석기</header>
+  <div class="header">
+    <div class="brand">
+      <div class="logo">KR</div>
+      <div>
+        <div class="h-title" id="headerTitle">한국 운동偏好 × 个性化 마라松 어시스턴트</div>
+        <div class="h-sub">韩国运动偏好 × 个性化马拉松小助手</div>
+      </div>
+    </div>
+    <div class="langs">
+      <button id="btnKR">KR</button>
+      <button id="btnCN">CN</button>
+    </div>
+  </div>
 
-<div class="container">
+  <div class="container">
+    <div class="grid">
+      <!-- LEFT 主内容 -->
+      <div>
+        <section class="card">
+          <div class="section-title" id="title1">① 韩国人最常参与的运动（互动）</div>
+          <div class="lead" id="lead1">将鼠标移到某个运动 → 显示简介；点击“跑步/马拉松”将跳转到马拉松小助手并展开小游戏。</div>
+          <div class="canvas-wrap">
+            <canvas id="sportChart" height="220"></canvas>
+          </div>
+          <div class="legend" id="legend"></div>
+        </section>
 
-    <div class="lang-btns">
-        <button onclick="setLang('ko')">🇰🇷 한국어</button>
-        <button onclick="setLang('zh')">🇨🇳 中文</button>
-        <button onclick="setLang('en')">🇺🇸 English</button>
+        <section class="card" style="margin-top:16px">
+          <div class="section-title" id="title2">② 韩国马拉松参与趋势</div>
+          <div class="lead" id="lead2">示例数据：用于展示交互与趋势（万 人）</div>
+          <div class="canvas-wrap" style="padding:8px;margin-top:8px">
+            <canvas id="trendChart" height="140"></canvas>
+          </div>
+          <div style="margin-top:10px;color:var(--muted)" id="trendNote">示例结论：半马 &gt; 全马 &gt; 10K；近年参与人数上升</div>
+        </section>
+      </div>
+
+      <!-- RIGHT 侧边：小助手 + 模拟 + 游戏入口 -->
+      <aside class="card">
+        <div class="section-title" id="assistantTitle">③ 个人马拉松适配分析</div>
+        <div class="lead" id="assistantLead">输入：年龄 / 性别(选填) / 身高 / 体重 / 运动频率 / 目标赛事 → 推荐 & 预计时间</div>
+
+        <div style="margin-top:12px">
+          <div class="form-grid">
+            <div>
+              <label id="lblAge">年龄</label>
+              <input id="age" type="number" placeholder="e.g. 28" />
+            </div>
+            <div>
+              <label id="lblGender">性别（선택）</label>
+              <select id="gender">
+                <option value="">不填写</option>
+                <option value="male">男 / 남</option>
+                <option value="female">女 / 여</option>
+              </select>
+            </div>
+            <div>
+              <label id="lblHeight">身高（cm）</label>
+              <input id="height" type="number" placeholder="e.g. 170" />
+            </div>
+            <div>
+              <label id="lblWeight">体重（kg）</label>
+              <input id="weight" type="number" placeholder="e.g. 65" />
+            </div>
+            <div class="full">
+              <label id="lblFreq">平时运动量</label>
+              <select id="freq">
+                <option value="low">很少</option>
+                <option value="1">一周 1–2 次</option>
+                <option value="2">一周 3–4 次</option>
+                <option value="3">每周超过 5 次</option>
+              </select>
+            </div>
+            <div class="full">
+              <label id="lblGoal">目标赛事</label>
+              <select id="goal">
+                <option value="10">10 公里</option>
+                <option value="21">半程马拉松 (21km)</option>
+                <option value="42">全程马拉松 (42km)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn" id="runAnalyze">开始分析</button>
+            <button class="btn secondary" id="quickEstimate">快速估算时间</button>
+            <button class="btn ghost" id="clearBtn">重置</button>
+          </div>
+
+          <div class="result" id="resultBox" aria-live="polite"></div>
+
+          <div class="route" style="margin-top:12px">
+            <div class="section-title" id="simTitle">④ 路线模拟器</div>
+            <div id="routeBox" style="margin-top:8px">
+              <svg id="miniRunner" class="runner-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <g fill="none" stroke="#ff5a5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="14" cy="10" r="4" fill="#ff5a5f" />
+                  <path d="M18 14c6 2 12 6 16 10" />
+                  <path d="M24 22c4 6 8 12 10 18" />
+                  <path d="M10 34c6-2 8-8 14-8" />
+                  <path d="M28 44l8-6 8 2" />
+                </g>
+              </svg>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+              <button class="btn" id="startRun">开始模拟 / 시뮬레이션 시작</button>
+              <button class="btn ghost" id="openGameBtn" title="打开小游戏（在页面内）">Play Mini-Game</button>
+              <div style="align-self:center;color:var(--muted);font-size:13px" id="routeHint">点击开始，跑步小人会沿路线前进</div>
+            </div>
+          </div>
+
+          <!-- 这里放游戏卡（默认折叠） -->
+          <div id="gameCard" class="game-card" style="display:none;margin-top:14px">
+            <div class="game-header">
+              <div style="font-weight:800">🏁 Futuristic Marathon Mini-Game</div>
+              <div style="font-size:12px;color:#cfefff">键盘：← → / Shift 冲刺 / Space 跳</div>
+            </div>
+            <div class="game-body">
+              <div class="game-canvas-wrap">
+                <canvas id="gameCanvas" width="800" height="360" tabindex="0"></canvas>
+              </div>
+              <div class="game-controls">
+                <div class="hud-row">
+                  <div class="chip">Distance <span class="val" id="hudDist">0.00 km</span></div>
+                </div>
+                <div class="hud-row">
+                  <div class="chip">Pace <span class="val" id="hudPace">--'--"</span></div>
+                </div>
+                <div class="hud-row">
+                  <div class="chip">Energy <span class="val" id="hudEnergy">100%</span></div>
+                </div>
+
+                <div style="margin-top:12px" class="small-note">移动端按钮：</div>
+                <div class="control-btn" style="margin-top:6px">
+                  <button id="leftBtn">◀</button>
+                  <button id="sprintBtn">⚡</button>
+                  <button id="rightBtn">▶</button>
+                </div>
+                <div class="small-note">目标里程会显示 5 / 10 / 21 km 路牌提示。</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
     </div>
 
-    <div class="card">
-        <h2 id="login_title">이름을 입력하세요</h2>
-        <input id="username" placeholder="홍길동" />
-        <button class="action" onclick="login()" id="login_btn">로그인</button>
-    </div>
+    <footer>示例网页 · 结合：韩国运动偏好 × 个性化马拉松小助手（含小游戏）</footer>
+  </div>
 
-    <div class="card">
-        <h3 id="tool_title">마라톤 추천 도구</h3>
-        <input id="weight" type="number" placeholder="체중 (kg)" />
-        <input id="height" type="number" placeholder="키 (cm)" />
-        <button class="action" onclick="analyze()" id="analyze_btn">분석하기</button>
-        <p id="result"></p>
-    </div>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 
-    <div class="card">
-        <h3 id="rank_title">🏆 실시간 랭킹 Top 10</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th id="rank_name">이름</th>
-                    <th id="rank_score">추천 거리</th>
-                </tr>
-            </thead>
-            <tbody id="rankList"></tbody>
-        </table>
-    </div>
+  <script>
+  /* ===========================
+     语言/图表/分析（与你原网页一致）
+     =========================== */
+  const LANG = {
+    kr: { headerTitle:'한국 운동 트렌드 × 마라톤 퍼스널 어시스턴트', title1:'① 한국인이 즐기는 운동 (인터랙티브)', lead1:'차트에서 항목에 마우스를 올리면 설명이 나타납니다. "달리기/마라톤" 클릭 시 어시턴트로 이동합니다.', title2:'② 한국 마라톤 참가 추이 (예시 데이터)', lead2:'예시 데이터는 데모용입니다: 마라톤 참가자 수(만 명) 추이입니다.', trendNote:'예시 결론: 하프 > 풀 > 10K; 최근 참가자 수 증가', assistantTitle:'③ 퍼스널 마라톤 추천', assistantLead:'입력: 나이 / 성별(선택) / 신장 / 체중 / 운동 빈도 / 목표 종목 → 추천 및 예상 완주 시간', lblAge:'나이 (세)', lblGender:'성별 (선택)', lblHeight:'신장 (cm)', lblWeight:'체중 (kg)', lblFreq:'평소 운동량', lblGoal:'목표 종목', runAnalyze:'분석 시작', quickEstimate:'빠른 시간 계산', clearBtn:'리셋', resultTitle:'📊 맞춤 추천 결과', bmiLabel:'BMI 지수', recommendLabel:'추천 종목', paceLabel:'권장 페이스', timeLabel:'예상 완주 시간', adviceTitle:'📋 훈련 가이드', noteText:'💡 참고: 본 추천은 BMI와 자가보고 운동 빈도 기반의 참고용 정보입니다. 전문 상담 권장。', alertHeight:'신장과 체중을 입력하세요', advice10k:['주 3회: 장거리 1회(45-70분) + 인터벌 1회 + 회복 러닝 1회','근력훈련 및 스트레칭 병행','대회 6주 전 장거리 점진 증량'], adviceHalf:['10~12주 훈련 권장(장거리+템포)','주 3-5회 훈련, 점진적 거리 증가','회복 및 영양 관리 중요'], adviceFull:['최소 16주 체계적 훈련 권장','주 1회 장거리(점진 30km+) + 템포/인터벌','보급 전략 및 부상 예방 중요'], simStart:'시뮬레이션 시작', routeHint:'클릭하면 러닝 아이콘이 이동합니다'},
+    cn: { headerTitle:'韩国运动偏好 × 个性化马拉松小助手', title1:'① 韩国人常参与的运动（互动可视化）', lead1:'将鼠标移到某个运动 → 显示简介；点击“跑步/马拉松”将跳转到马拉松小助手。', title2:'② 韩国马拉松参与趋势（示例数据）', lead2:'示例数据仅用于展示交互：韩国马拉松参与人数趋势（万 人）。', trendNote:'示例结论：半马 > 全马 > 10K；参与人数近年上升', assistantTitle:'③ 个人马拉松适配分析', assistantLead:'输入年龄 / 性别（选填） / 身高 / 体重 / 运动频率 / 目标赛事 → 推荐与预计完赛时间', lblAge:'年龄（岁）', lblGender:'性别（选填）', lblHeight:'身高（cm）', lblWeight:'体重（kg）', lblFreq:'平时运动量', lblGoal:'目标赛事', runAnalyze:'开始分析', quickEstimate:'快速估算时间', clearBtn:'重置', resultTitle:'📊 个性化推荐结果', bmiLabel:'BMI 指数', recommendLabel:'推荐距离', paceLabel:'建议配速', timeLabel:'预计完赛时间', adviceTitle:'📋 训练建议', noteText:'💡 提示：本推荐基于 BMI 与运动频率，仅供参考。专业计划请咨询教练或运动医学专家。', alertHeight:'请输入身高和体重', advice10k:['每周 3 次训练：一次长跑（45-70 分钟）+ 一次间歇 + 一次轻松跑','加入力量训练与拉伸','比赛前 6 周逐步增加长跑距离'], adviceHalf:['建议 10~12 周训练计划，包含长跑与节奏跑','每周 3-5 次训练，逐步增加长距离','重视恢复与营养，赛前 2 周减量训练'], adviceFull:['建议至少 16 周系统训练并咨询教练','每周包含长跑（逐步达到 30km+）、节奏跑、间歇训练','注重补给策略与伤病预防'], simStart:'开始模拟', routeHint:'点击开始，跑步小人会沿路线前进'}
+  };
 
-</div>
+  let lang = 'kr';
+  const krBtn = document.getElementById('btnKR');
+  const cnBtn = document.getElementById('btnCN');
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
-    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
+  function setLang(l){
+    if(!LANG[l]) l='kr';
+    lang = l; localStorage.setItem('siteLang', l);
+    krBtn.classList.toggle('active', l==='kr');
+    cnBtn.classList.toggle('active', l==='cn');
+    const t = LANG[l];
+    document.getElementById('headerTitle').innerText = t.headerTitle;
+    document.getElementById('title1').innerText = t.title1;
+    document.getElementById('lead1').innerText = t.lead1;
+    document.getElementById('title2').innerText = t.title2;
+    document.getElementById('lead2').innerText = t.lead2;
+    document.getElementById('trendNote').innerText = t.trendNote;
+    document.getElementById('assistantTitle').innerText = t.assistantTitle;
+    document.getElementById('assistantLead').innerText = t.assistantLead;
+    document.getElementById('lblAge').innerText = t.lblAge;
+    document.getElementById('lblGender').innerText = t.lblGender;
+    document.getElementById('lblHeight').innerText = t.lblHeight;
+    document.getElementById('lblWeight').innerText = t.lblWeight;
+    document.getElementById('lblFreq').innerText = t.lblFreq;
+    document.getElementById('lblGoal').innerText = t.lblGoal;
+    document.getElementById('runAnalyze').innerText = t.runAnalyze;
+    document.getElementById('quickEstimate').innerText = t.quickEstimate;
+    document.getElementById('clearBtn').innerText = t.clearBtn;
+    document.getElementById('startRun').innerText = t.simStart || t.simStart;
+    document.getElementById('routeHint').innerText = t.routeHint || t.routeHint;
 
-    // ✅ 你提供的 firebase 配置（已完整替换）
-    const firebaseConfig = {
-      apiKey: "AIzaSyCXVK_p-JgQIRg4YrfAaFU7gLDRRHPSHRY",
-      authDomain: "mls123-11999.firebaseapp.com",
-      databaseURL: "https://mls123-11999-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "mls123-11999",
-      storageBucket: "mls123-11999.firebasestorage.app",
-      messagingSenderId: "609804813150",
-      appId: "1:609804813150:web:baf8d8c75364457bff05cf",
-      measurementId: "G-K01XZ2XL0M"
-    };
+    // dropdown texts
+    const genderSelect = document.getElementById('gender');
+    if(l==='kr'){ genderSelect.options[0].text='선택 안 함'; genderSelect.options[1].text='남성'; genderSelect.options[2].text='여성'; }
+    else { genderSelect.options[0].text='不填写'; genderSelect.options[1].text='男'; genderSelect.options[2].text='女'; }
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const freq = document.getElementById('freq');
+    freq.options[0].text = l==='cn' ? '很少' : '거의 안 함';
+    freq.options[1].text = l==='cn' ? '一周 1–2 次' : '주 1–2회';
+    freq.options[2].text = l==='cn' ? '一周 3–4 次' : '주 3–4회';
+    freq.options[3].text = l==='cn' ? '每周超过 5 次' : '주 5회 이상';
 
-    let currentUser = "";
+    updateLegend();
+  }
 
-    // 로그인
-    function login() {
-        currentUser = document.getElementById("username").value.trim();
-        if (!currentUser) {
-            alert("이름을 입력하세요.");
-            return;
+  krBtn.addEventListener('click', ()=> setLang('kr'));
+  cnBtn.addEventListener('click', ()=> setLang('cn'));
+  window.addEventListener('load', ()=> setLang(localStorage.getItem('siteLang') || 'kr'));
+
+  // Charts
+  const sportLabels = ['Running / Marathon', 'Football', 'Baseball', 'Gym', 'Badminton', 'Hiking', 'Others'];
+  const sportColors = ['#1f6feb','#ff6b6b','#ff9f40','#00c2a8','#7b61ff','#66bb6a','#bfc5cc'];
+  const sportData = [35,15,12,18,9,7,4];
+
+  const sportCtx = document.getElementById('sportChart');
+  const sportChart = new Chart(sportCtx, {
+    type: 'doughnut',
+    data: { labels: sportLabels, datasets: [{ data: sportData, backgroundColor: sportColors, hoverOffset:12 }] },
+    options: {
+      plugins:{legend:{display:false}},
+      onHover: (evt, items) => { evt.native.target.style.cursor = items && items.length ? 'pointer' : 'default'; },
+      onClick: (evt, items) => {
+        if(items.length && items[0].index === 0){
+          // 点击跑步 -> 滚动到小助手并展开游戏卡
+          document.querySelector('aside').scrollIntoView({behavior:'smooth'});
+          showGameCard();
         }
-        alert("로그인 완료！");
+      }
     }
+  });
 
-    // 분석 (简单 BMI → 推荐马拉松距离)
-    function analyze() {
-        if (!currentUser) {
-            alert("로그인 후 이용하세요.");
-            return;
-        }
-        const w = parseFloat(document.getElementById("weight").value);
-        const h = parseFloat(document.getElementById("height").value) / 100;
+  function updateLegend(){
+    const wrapper = document.getElementById('legend'); wrapper.innerHTML='';
+    const descs_cn = ['跑步/马拉松：大众参与度高，门槛低、健康/社交','足球：受众广，赛事多','棒球：职业联赛热度高','健身：健身房/自我训练','羽毛球：普及且社交性强','登山：户外休闲常见','其他：多种运动'];
+    const descs_kr = ['달리기/마라톤: 대중 참여도 높음, 진입장벽 낮음','축구: 대중적 인기','야구: 프로리그 인기','헬스: 개인운동(짐)','배드민턴: 보편적 레저운동','등산: 야외 활동 인기','기타: 다양한 종목'];
+    let descs = lang==='kr' ? descs_kr : descs_cn;
+    sportLabels.forEach((lab,i)=>{
+      const row = document.createElement('div'); row.className='legend-item';
+      const sw = document.createElement('span'); sw.className='swatch'; sw.style.background=sportColors[i];
+      const txt = document.createElement('div'); txt.innerHTML = `<strong style="display:block">${(lang==='cn'? labCn(i) : lab)}</strong><div style="font-size:12px;color:var(--muted)">${descs[i]}</div>`;
+      row.appendChild(sw); row.appendChild(txt); wrapper.appendChild(row);
+    });
+  }
+  function labCn(i){ const a=['跑步 / 马拉松','足球','棒球','健身','羽毛球','登山','其他']; return a[i] || sportLabels[i]; }
 
-        if (!w || !h) {
-            alert("체중/키를 입력하세요.");
-            return;
-        }
+  // Trend chart
+  const trendCtx = document.getElementById('trendChart');
+  const trendChart = new Chart(trendCtx, {
+    type: 'line',
+    data: { labels:['2019','2020','2021','2022','2023','2024'], datasets:[{ label:'Participants (10k)', data:[18,10,12,15,17,19], borderColor:'#1f6feb', backgroundColor:'rgba(31,111,235,0.07)', tension:0.25, fill:true }] },
+    options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+  });
 
-        const bmi = w / (h * h);
-        let distance = "";
+  // Analysis logic (unchanged)
+  function analyzeInput(){
+    const t = LANG[lang];
+    const height = Number(document.getElementById('height').value);
+    const weight = Number(document.getElementById('weight').value);
+    const freq = document.getElementById('freq').value;
+    const goal = Number(document.getElementById('goal').value);
+    if(!height || !weight){ alert(t.alertHeight); return null; }
+    const bmi = weight / ((height/100)*(height/100));
+    let recommended = '5km';
+    if(bmi >= 18.5 && bmi < 25){
+      if(freq === '2') recommended = goal <= 10 ? '10km' : (goal === 21 ? (lang==='cn'?'半程马拉松': '하프 마라톤') : '10km');
+      if(freq === '3') recommended = (goal === 42) ? (lang==='cn'?'半程或全程':'하프 또는 풀') : (goal===21 ? (lang==='cn'?'半程马拉松':'하프 마라톤') : '10km');
+      if(freq === '1') recommended = '10km';
+    } else if(bmi >= 25){
+      recommended = freq === '3' ? '10km' : '5km';
+    } else { recommended = '5km'; }
+    let basePace = 8.0;
+    if(freq === '1') basePace = 7.2;
+    if(freq === '2') basePace = 6.5;
+    if(freq === '3') basePace = 5.8;
+    if(bmi < 18.5) basePace += 0.4;
+    if(bmi >= 25) basePace += 0.3;
+    const estMin = Math.round(goal * basePace);
+    const hh = Math.floor(estMin/60);
+    const mm = estMin % 60;
+    const timeStr = hh>0 ? `${hh}${lang==='cn'?'小时':'시간'} ${mm}${lang==='cn'?'分':'분'}` : `${mm}${lang==='cn'?'分':'분'}`;
+    const advice = (goal===10) ? LANG[lang].advice10k : (goal===21 ? LANG[lang].adviceHalf : LANG[lang].adviceFull);
+    return { bmi: bmi.toFixed(1), recommended, pace: basePace.toFixed(2), estTime: timeStr, advice };
+  }
 
-        if (bmi < 20) distance = "10km";
-        else if (bmi < 24) distance = "하프 마라톤 (21km)";
-        else distance = "풀코스 마라톤 (42km)";
+  document.getElementById('runAnalyze').addEventListener('click', ()=>{
+    const t = LANG[lang]; const res = analyzeInput(); if(!res) return;
+    const box = document.getElementById('resultBox'); let html = `<div style="font-weight:700;margin-bottom:8px">${t.resultTitle}</div>`;
+    html += `<div class="stat-grid">`;
+    html += `<div class="stat"><div class="stat-label">${t.bmiLabel}</div><div class="stat-value">${res.bmi}</div></div>`;
+    html += `<div class="stat"><div class="stat-label">${t.recommendLabel}</div><div class="stat-value">${res.recommended}</div></div>`;
+    html += `<div class="stat"><div class="stat-label">${t.paceLabel}</div><div class="stat-value">${res.pace} ${lang==='cn'?'分/公里':'분/km'}</div></div>`;
+    html += `<div class="stat"><div class="stat-label">${t.timeLabel}</div><div class="stat-value">${res.estTime}</div></div>`;
+    html += `</div>`;
+    html += `<div class="advice"><div style="font-weight:700;margin-bottom:8px">${t.adviceTitle}</div><ul style="padding-left:18px;margin:0;color:var(--muted)">`;
+    res.advice.forEach(a=> html += `<li>${a}</li>`); html += `</ul></div><div class="note">${t.noteText}</div>`;
+    box.innerHTML = html; box.classList.add('show'); box.scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
 
-        document.getElementById("result").innerText =
-            currentUser + " 님에게 추천되는 코스: " + distance;
+  document.getElementById('quickEstimate').addEventListener('click', ()=>{
+    const t = LANG[lang]; const height = Number(document.getElementById('height').value); const weight = Number(document.getElementById('weight').value); const freq = document.getElementById('freq').value;
+    if(!height || !weight){ alert(t.alertHeight); return; }
+    let basePace = 8.0; if(freq==='1') basePace=7.2; if(freq==='2') basePace=6.5; if(freq==='3') basePace=5.8;
+    const bmi = weight / ((height/100)*(height/100)); if(bmi<18.5) basePace +=0.4; if(bmi>=25) basePace+=0.3;
+    const distances = {'10km':10,'Half':21.0975,'Full':42.195};
+    let html = `<div style="font-weight:700;margin-bottom:8px">${LANG[lang].quickTitle || 'Estimation'}</div>`;
+    html += `<div style="margin-bottom:8px">${LANG[lang].quickSubtitle || ''} — ${basePace.toFixed(2)} ${lang==='cn'?'分/公里':'분/km'}</div>`;
+    html += `<div class="stat-grid">`;
+    for(const k in distances){ const minutes = Math.round(distances[k]*basePace); const hh=Math.floor(minutes/60); const mm=minutes%60; const timeStr = hh>0 ? `${hh}${lang==='cn'?'小时':'시간'} ${mm}${lang==='cn'?'分':'분'}` : `${mm}${lang==='cn'?'分':'분'}`; html += `<div class="stat"><div class="stat-label">${k}</div><div class="stat-value">${timeStr}</div></div>`;}
+    html += `</div><div class="note">${LANG[lang].noteText}</div>`; const box = document.getElementById('resultBox'); box.innerHTML = html; box.classList.add('show'); box.scrollIntoView({behavior:'smooth', block:'nearest'});
+  });
 
-        // Firebase 저장
-        set(ref(db, "marathon/" + currentUser), {
-            name: currentUser,
-            score: distance
-        });
-    }
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    ['age','height','weight'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('freq').value='low'; document.getElementById('goal').value='10';
+    const box = document.getElementById('resultBox'); box.innerHTML=''; box.classList.remove('show');
+  });
 
-    // 랭킹 출력
-    const rankRef = ref(db, "marathon");
-    onValue(rankRef, snapshot => {
-        const data = snapshot.val();
-        const tbody = document.getElementById("rankList");
-        tbody.innerHTML = "";
+  // route mini runner
+  const miniRunner = document.getElementById('miniRunner');
+  document.getElementById('startRun').addEventListener('click', ()=>{
+    const box = document.getElementById('routeBox'); const boxW = box.clientWidth; const target = boxW - 58;
+    miniRunner.classList.add('running'); miniRunner.style.left='12px'; void miniRunner.offsetWidth; miniRunner.style.transition='left 3s linear'; miniRunner.style.left = target + 'px';
+    setTimeout(()=>{ miniRunner.style.transition = 'left 0.9s ease'; miniRunner.style.left = '12px'; setTimeout(()=>{ miniRunner.classList.remove('running'); },1000); },3800);
+  });
 
-        if (!data) return;
+  // 展示/隐藏游戏卡
+  const gameCard = document.getElementById('gameCard');
+  const openGameBtn = document.getElementById('openGameBtn');
+  function showGameCard(){ if(gameCard.style.display==='none'){ gameCard.style.display='block'; setTimeout(()=> { document.getElementById('gameCanvas').focus(); startGameLoopIfReady(); },150); } }
+  openGameBtn.addEventListener('click', ()=>{ showGameCard(); document.getElementById('gameCanvas').scrollIntoView({behavior:'smooth'}); });
 
-        const arr = Object.values(data).slice(0, 10);
+  /* ======================
+     小游戏脚本（KEEP 风格跑步小人）
+     关键点：把极简线条 SVG 渲染为 Image，然后 drawImage 到 Canvas（保证跑步小人一定可见）
+     ====================== */
+  (function(){
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    // logical resolution
+    canvas.width = 800; canvas.height = 360;
+    let W = canvas.width, H = canvas.height;
 
-        arr.forEach(item => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${item.name}</td><td>${item.score}</td>`;
-            tbody.appendChild(tr);
-        });
+    // player
+    const player = { x: W*0.18, y: H*0.62, w: 48, h:48, vy:0, onGround:true, velX:0, baseSpeed:2.1, sprinting:false };
+
+    // state
+    let obstacles = [], pickups = [], trails = [], lastSpawn=0, tNow=0;
+    let distanceMeters = 0, energy=100, difficulty='normal';
+    let reached = {5:false,10:false,21:false};
+    const hudDist = document.getElementById('hudDist');
+    const hudPace = document.getElementById('hudPace');
+    const hudEnergy = document.getElementById('hudEnergy');
+
+    // controls
+    const KEYS = { left:false, right:false, sprint:false };
+    window.addEventListener('keydown', e=>{
+      if(e.key==='ArrowLeft') KEYS.left=true;
+      if(e.key==='ArrowRight') KEYS.right=true;
+      if(e.key==='Shift') KEYS.sprint=true;
+      if(e.code==='Space'){ if(player.onGround){ player.vy=-12; player.onGround=false; } }
+    });
+    window.addEventListener('keyup', e=>{
+      if(e.key==='ArrowLeft') KEYS.left=false;
+      if(e.key==='ArrowRight') KEYS.right=false;
+      if(e.key==='Shift') KEYS.sprint=false;
     });
 
-    // 多语言
-    const texts = {
-        ko: {
-            title: "🇰🇷 마라톤 능력 분석기",
-            login_title: "이름을 입력하세요",
-            login_btn: "로그인",
-            tool_title: "마라톤 추천 도구",
-            analyze_btn: "분석하기",
-            rank_title: "🏆 실시간 랭킹 Top 10",
-            rank_name: "이름",
-            rank_score: "추천 거리"
-        },
-        zh: {
-            title: "🇨🇳 马拉松能力分析器",
-            login_title: "请输入姓名",
-            login_btn: "登录",
-            tool_title: "马拉松推荐工具",
-            analyze_btn: "开始分析",
-            rank_title: "🏆 实时排行榜 Top 10",
-            rank_name: "姓名",
-            rank_score: "推荐距离"
-        },
-        en: {
-            title: "🇺🇸 Marathon Ability Analyzer",
-            login_title: "Enter your name",
-            login_btn: "Login",
-            tool_title: "Marathon Recommendation Tool",
-            analyze_btn: "Analyze",
-            rank_title: "🏆 Real-time Ranking Top 10",
-            rank_name: "Name",
-            rank_score: "Recommended Distance"
+    // UI buttons (touch & mouse)
+    const leftBtn = document.getElementById('leftBtn'), rightBtn = document.getElementById('rightBtn'), sprintBtn = document.getElementById('sprintBtn');
+    ['touchstart','mousedown'].forEach(evt=> leftBtn.addEventListener(evt, ()=> KEYS.left=true) );
+    ['touchend','mouseup','mouseleave'].forEach(evt=> leftBtn.addEventListener(evt, ()=> KEYS.left=false) );
+    ['touchstart','mousedown'].forEach(evt=> rightBtn.addEventListener(evt, ()=> KEYS.right=true) );
+    ['touchend','mouseup','mouseleave'].forEach(evt=> rightBtn.addEventListener(evt, ()=> KEYS.right=false) );
+    ['touchstart','mousedown'].forEach(evt=> sprintBtn.addEventListener(evt, ()=> KEYS.sprint=true) );
+    ['touchend','mouseup','mouseleave'].forEach(evt=> sprintBtn.addEventListener(evt, ()=> KEYS.sprint=false) );
+
+    // spawn helpers
+    function spawnObstacle(){ const size = 26 + Math.random()*42; obstacles.push({ x: W + 60 + Math.random()*120, y: H*0.65 + (player.h - size*0.6), w: size*0.6, h: size*0.6 }); }
+    function spawnPickup(){ pickups.push({ x: W + 80 + Math.random()*200, y: H*0.65 - 48 - Math.random()*20, w:20, h:26}); }
+    function addTrail(){ trails.push({ x: player.x + player.w*0.5 + Math.random()*6, y: player.y + player.h*0.55 + Math.random()*6, alpha: 1.0, life: 36 }); }
+
+    function flash(color){ const overlay = document.createElement('div'); overlay.style.position='fixed'; overlay.style.left='0'; overlay.style.top='0'; overlay.style.width='100%'; overlay.style.height='100%'; overlay.style.background=color; overlay.style.opacity='0.06'; overlay.style.zIndex=9999; document.body.appendChild(overlay); setTimeout(()=> overlay.style.opacity='0', 60); setTimeout(()=> overlay.remove(),260); }
+
+    function updateHUD(){ hudDist.innerText = (distanceMeters/1000).toFixed(2) + ' km'; hudEnergy.innerText = Math.max(0,Math.round(energy)) + '%'; const paceMin = Math.max(3.0, 6.5 - (player.baseSpeed/1.4)); const paceSec = Math.round((paceMin % 1)*60); hudPace.innerText = `${Math.floor(paceMin)}'${String(paceSec).padStart(2,'0')}" /km`; }
+
+    function showMarker(msg){
+      const rect = canvas.getBoundingClientRect();
+      const overlay = document.createElement('div');
+      overlay.style.position='absolute';
+      overlay.style.left = (rect.left + rect.width*0.5) + 'px';
+      overlay.style.top = (rect.top + 18) + 'px';
+      overlay.style.transform='translateX(-50%)';
+      overlay.style.padding='8px 14px';
+      overlay.style.borderRadius='8px';
+      overlay.style.background='linear-gradient(90deg, rgba(123,97,255,0.12), rgba(90,160,255,0.08))';
+      overlay.style.color='#dffaff';
+      overlay.style.fontWeight='800';
+      overlay.style.zIndex=240;
+      overlay.innerText = msg;
+      document.body.appendChild(overlay);
+      overlay.animate([{opacity:1, transform:'translateY(0)'},{opacity:0, transform:'translateY(-18px)'}], {duration:1400, easing:'ease-out'});
+      setTimeout(()=>overlay.remove(),1500);
+    }
+
+    /* ====== KEEP 风格极简线条 SVG (单色) ======
+       We'll create an inline SVG and render it as an Image to draw into canvas.
+       The SVG is small, minimal stroke, looks like KEEP runner.
+    */
+    const runnerSVG = `
+      <svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'>
+        <g fill='none' stroke='#0f1724' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'>
+          <!-- head -->
+          <circle cx='28' cy='20' r='8' fill='#0f1724'/>
+          <!-- body -->
+          <path d='M34 30 L46 44 L58 52' />
+          <!-- arm -->
+          <path d='M46 36 L60 28' />
+          <!-- legs -->
+          <path d='M46 58 L36 76' />
+          <path d='M58 64 L74 78' />
+          <!-- simple motion lines -->
+          <path d='M20 48 C12 56, 10 70, 24 78' stroke-opacity='0.18' />
+        </g>
+      </svg>
+    `;
+    const runnerImg = new Image();
+    let runnerImgReady = false;
+    runnerImg.onload = ()=>{ runnerImgReady = true; startGameLoopIfReady(); };
+    runnerImg.onerror = ()=>{ /* fallback - still draw silhouette if error */ runnerImgReady = false; startGameLoopIfReady(); };
+    runnerImg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(runnerSVG);
+
+    function drawRunnerImg(ctx){
+      if(runnerImgReady){
+        // draw centered vertically to player's y
+        const drawW = player.w;
+        const drawH = player.h;
+        const drawX = player.x; // left aligned
+        const drawY = player.y - (player.h * 0.28); // adjust so head sits slightly above
+        ctx.drawImage(runnerImg, drawX, drawY, drawW, drawH);
+      } else {
+        // fallback silhouette (if image fails)
+        ctx.save(); ctx.fillStyle='#0f1724'; ctx.beginPath(); ctx.arc(player.x+player.w*0.5, player.y+14, 10,0,Math.PI*2); ctx.fill();
+        ctx.fillRect(player.x+player.w*0.32, player.y+22, player.w*0.36, 28);
+        ctx.fillRect(player.x+6, player.y+44, 10, 20);
+        ctx.fillRect(player.x+player.w-16, player.y+44, 10, 20);
+        ctx.restore();
+      }
+    }
+
+    // main draw loop
+    function draw(timestamp){
+      if(!tNow) tNow=timestamp; const dt = Math.min(40, timestamp - tNow); tNow = timestamp;
+      ctx.clearRect(0,0,W,H);
+
+      // subtle background lines
+      ctx.save(); ctx.globalAlpha = 0.14; ctx.strokeStyle = 'rgba(90,160,255,0.05)'; ctx.lineWidth=2;
+      for(let i=0;i<2;i++){
+        ctx.beginPath();
+        for(let x=0;x<=W;x+=12){
+          const y = 80 + Math.sin((timestamp/700)*(0.6+i*0.25) + x/120)* (14 + i*6);
+          if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
         }
-    };
+        ctx.stroke();
+      }
+      ctx.restore();
 
-    window.setLang = function(lang) {
-        const t = texts[lang];
-        document.getElementById("title").innerText = t.title;
-        document.getElementById("login_title").innerText = t.login_title;
-        document.getElementById("login_btn").innerText = t.login_btn;
-        document.getElementById("tool_title").innerText = t.tool_title;
-        document.getElementById("analyze_btn").innerText = t.analyze_btn;
-        document.getElementById("rank_title").innerText = t.rank_title;
-        document.getElementById("rank_name").innerText = t.rank_name;
-        document.getElementById("rank_score").innerText = t.rank_score;
-    };
+      // ground strip
+      ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(0,H*0.72,W,H*0.28);
 
-</script>
+      // movement
+      if(KEYS.left) player.velX = -3.6;
+      else if(KEYS.right) player.velX = 3.6;
+      else player.velX *= 0.86;
 
+      player.sprinting = KEYS.sprint && energy>6;
+      const sprintFactor = player.sprinting ? 1.9 : 1.0;
+      if(player.sprinting) energy -= 12 * (dt/1000); else energy += 6 * (dt/1000);
+      energy = Math.min(100, Math.max(0, energy));
+
+      player.x += player.velX * (player.baseSpeed * sprintFactor);
+      const leftLimit=24, rightLimit = W - player.w - 24;
+      if(player.x<leftLimit) player.x=leftLimit;
+      if(player.x>rightLimit) player.x=rightLimit;
+
+      // gravity
+      player.vy += 0.8; player.y += player.vy; if(player.y > H*0.65){ player.y=H*0.65; player.vy=0; player.onGround=true; }
+
+      // trails
+      if(Math.random() < 0.28) addTrail();
+
+      // draw trails
+      for(let i=trails.length-1;i>=0;i--){
+        const tr = trails[i];
+        ctx.save(); ctx.fillStyle = 'rgba(0,212,255,'+(tr.alpha*0.06)+')'; ctx.beginPath(); ctx.ellipse(tr.x,tr.y,26,8,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+        tr.alpha -= 0.02; tr.life -= 1; tr.x -= 1.2;
+        if(tr.life<=0 || tr.alpha<=0) trails.splice(i,1);
+      }
+
+      // obstacles
+      const worldSpeed = (1.8 + (difficulty==='hard'?0.9:0.0)) * (1 + (distanceMeters/10000));
+      for(let i=obstacles.length-1;i>=0;i--){
+        const o = obstacles[i];
+        o.x -= (worldSpeed * 2.0);
+        ctx.save(); ctx.fillStyle='#242424'; ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=6;
+        ctx.fillRect(o.x,o.y,o.w,o.h);
+        ctx.restore();
+        if(player.x < o.x + o.w && player.x + player.w > o.x && player.y + player.h > o.y && player.y < o.y + o.h){
+          energy -= 18; player.x -= 28; flash('#ff5a5f'); obstacles.splice(i,1);
+        }
+        if(o.x < -120) obstacles.splice(i,1);
+      }
+
+      // pickups
+      for(let i=pickups.length-1;i>=0;i--){
+        const p = pickups[i]; p.x -= (worldSpeed * 2.2);
+        ctx.save(); ctx.fillStyle='rgba(0,212,255,0.95)'; ctx.fillRect(p.x,p.y,p.w,p.h); ctx.restore();
+        if(player.x < p.x + p.w && player.x + player.w > p.x && player.y + player.h > p.y && player.y < p.y + p.h){
+          energy = Math.min(100, energy + 28); for(let k=0;k<6;k++) addTrail(); pickups.splice(i,1); continue;
+        }
+        if(p.x < -120) pickups.splice(i,1);
+      }
+
+      // draw runner image (KEEP-style)
+      drawRunnerImg(ctx);
+
+      // spawn occasionally
+      if(timestamp - lastSpawn > (900 - Math.min(500, distanceMeters/6))){
+        lastSpawn = timestamp;
+        for(let k=0;k < (0.7 + Math.random()*1.6); k++){
+          if(Math.random() < 0.7) spawnObstacle(); else spawnPickup();
+        }
+      }
+
+      // distance progression (approx)
+      const forwardMeters = (1.6 * sprintFactor * (difficulty==='hard'?1.2:1.0)) * (dt / 16);
+      distanceMeters += forwardMeters;
+
+      // markers
+      [5,10,21].forEach(km => {
+        if(!reached[km] && (distanceMeters/1000) >= km - 0.02){ reached[km]=true; showMarker(km + ' km'); }
+      });
+
+      updateHUD();
+
+      // ground indicator
+      ctx.fillStyle='rgba(255,255,255,0.02)'; ctx.fillRect(0,H*0.72,W,2);
+
+      if((distanceMeters/1000) >= 42){
+        setTimeout(()=>{ alert('Finish! ' + (distanceMeters/1000).toFixed(2) + ' km'); location.reload(); }, 100);
+        return;
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    // ensure loop only starts when runner image ready & game visible
+    let loopStarted=false, imageReadyFlag=false;
+    function startGameLoopIfReady(){
+      // mark image readiness
+      imageReadyFlag = true;
+      if(!loopStarted && gameCard.style.display !== 'none'){
+        loopStarted = true;
+        requestAnimationFrame(draw);
+      }
+    }
+
+    // if runner image loaded earlier it triggers onload -> startGameLoopIfReady
+    runnerImg.onload = ()=> startGameLoopIfReady();
+    runnerImg.onerror = ()=> startGameLoopIfReady();
+
+    // observe show/hide
+    const observer = new MutationObserver(()=>{ if(document.getElementById('gameCard').style.display !== 'none'){ if(!loopStarted) { loopStarted=true; requestAnimationFrame(draw); } }});
+    observer.observe(document.getElementById('gameCard'), { attributes:true, attributeFilter:['style'] });
+
+    // initial spawn
+    setInterval(()=>{ if(document.getElementById('gameCard').style.display !== 'none'){ if(Math.random() < 0.8) spawnObstacle(); else spawnPickup(); } }, 1200);
+
+    // prevent spacebar scrolling
+    window.addEventListener('keydown', function(e){ if(e.code==='Space' && e.target===document.body) e.preventDefault(); });
+
+    // expose some functions for debugging (optional)
+    window._miniGame = { player, obstacles, pickups, distanceMeters };
+
+  })();
+
+  // ensure charts resize on window resize
+  window.addEventListener('resize', ()=>{ sportChart.resize(); trendChart.resize(); });
+
+  </script>
 </body>
 </html>
